@@ -67,6 +67,7 @@
             <h2 style="color:var(--gulf-blue); margin-bottom:25px;">يرجى اختيار المرحلة الدراسية للتقديم</h2>
             <div style="display: grid; gap: 18px;">
                 <button class="btn-action" onclick="openApply('بكالوريوس')">🎓 التقديم على برامج البكالوريوس</button>
+                <button class="btn-action" style="background: #e67e22;" onclick="openApply('تجسير')">🔄 نظام التجسير (لمرحلة البكالوريوس)</button>
                 <button class="btn-action" style="background: #6c757d;" onclick="openApply('دبلوم')">📜 التقديم على برامج الدبلوم</button>
                 <button class="btn-action" style="background: #343a40;" onclick="openApply('ماجستير')">📚 التقديم على الدراسات العليا</button>
             </div>
@@ -93,6 +94,15 @@
                     <div class="input-group"><label>مكان السكن (المدينة) *</label><input type="text" id="city" required></div>
                     <div class="input-group"><label>سنة التخرج *</label><input type="number" id="grad_year" required></div>
                 </div>
+
+                <div id="bridging_fields" style="display: none; background: #fffbf0; padding: 15px; border-radius: 12px; border: 1px solid #f39c12; margin: 15px 0;">
+                    <div class="section-title" style="font-size: 16px; border-right-color: #f39c12;">بيانات الدبلوم (تجسير)</div>
+                    <div class="grid-2">
+                        <div class="input-group"><label>تخصص الدبلوم السابق *</label><input type="text" id="old_major"></div>
+                        <div class="input-group"><label>معدل الدبلوم (من 5 أو 4) *</label><input type="text" id="old_gpa"></div>
+                    </div>
+                </div>
+
                 <div class="section-title" style="font-size: 16px;">المسار الأكاديمي المطلوب</div>
                 <div class="grid-2">
                     <div class="input-group">
@@ -101,11 +111,18 @@
                     </div>
                     <div class="input-group"><label>المعدل التراكمي الأخير *</label><input type="text" id="gpa" placeholder="0.00" required></div>
                 </div>
+                
                 <div class="section-title" style="font-size: 16px;">رفع المستندات الرسمية</div>
-                <div class="grid-2">
+                <div class="grid-2" id="docs_grid">
                     <div class="input-group"><label>صورة الهوية *</label><input type="file" id="file_id" required></div>
                     <div class="input-group"><label>صورة الشهادة *</label><input type="file" id="file_edu" required></div>
                 </div>
+                <div id="bridging_docs" style="display: none; margin-top: 10px;">
+                    <div class="grid-2">
+                        <div class="input-group" style="grid-column: span 2;"><label>صورة السجل الأكاديمي للدبلوم *</label><input type="file" id="file_transcript"></div>
+                    </div>
+                </div>
+
                 <button type="button" class="btn-action" onclick="validateToPay()">حفظ البيانات والانتقال للسداد</button>
             </form>
         </div>
@@ -230,38 +247,24 @@
         const select = document.getElementById('major_select');
         select.innerHTML = '<option value="">-- اختر التخصص --</option>';
         
-        // تحديث القائمة بجميع التخصصات المتاحة لكل مرحلة
+        if(type === 'تجسير') {
+            document.getElementById('bridging_fields').style.display = 'block';
+            document.getElementById('bridging_docs').style.display = 'block';
+        } else {
+            document.getElementById('bridging_fields').style.display = 'none';
+            document.getElementById('bridging_docs').style.display = 'none';
+        }
+
         const majors = {
-            'بكالوريوس': [
-                "تقنية المعلومات", 
-                "علوم الحاسب", 
-                "هندسة البرمجيات",
-                "الأمن السيبراني",
-                "إدارة أعمال", 
-                "القانون",
-                "اللغة الإنجليزية والترجمة",
-                "علوم الهندسة"
-            ],
-            'دبلوم': [
-                "دبلوم تقنية الشبكات",
-                "دبلوم البرمجة وقواعد البيانات",
-                "دبلوم إدارة الموارد البشرية",
-                "دبلوم المحاسبة",
-                "دبلوم التسويق الرقمي"
-            ],
-            'ماجستير': [
-                "ماجستير القانون العام",
-                "ماجستير القانون الخاص",
-                "ماجستير إدارة الأعمال (MBA)",
-                "ماجستير الأمن السيبراني"
-            ]
+            'بكالوريوس': ["تقنية المعلومات", "علوم الحاسب", "هندسة البرمجيات", "الأمن السيبراني", "إدارة أعمال", "القانون", "اللغة الإنجليزية والترجمة"],
+            'تجسير': ["بكالوريوس علوم الحاسب (تجسير)", "بكالوريوس تقنية المعلومات (تجسير)", "بكالوريوس الأمن السيبراني (تجسير)", "بكالوريوس هندسة البرمجيات (تجسير)", "بكالوريوس إدارة الأعمال (تجسير)", "بكالوريوس القانون (تجسير)", "بكالوريوس اللغة الإنجليزية والترجمة (تجسير)"],
+            'دبلوم': ["دبلوم تقنية الشبكات", "دبلوم البرمجة وقواعد البيانات", "دبلوم إدارة الموارد البشرية", "دبلوم المحاسبة"],
+            'ماجستير': ["ماجستير القانون العام", "ماجستير إدارة الأعمال (MBA)", "ماجستير الأمن السيبراني"]
         };
         
         majors[type].forEach(m => {
             let opt = document.createElement('option');
-            opt.value = m; 
-            opt.innerHTML = m; 
-            select.appendChild(opt);
+            opt.value = m; opt.innerHTML = m; select.appendChild(opt);
         });
         switchTab('apply');
     }
@@ -270,10 +273,17 @@
         if(document.getElementById('fullForm').checkValidity()) {
             localStorage.setItem('p_name', document.getElementById('name').value);
             localStorage.setItem('p_major', document.getElementById('major_select').value);
-            const msg = `🚨 تقديم جديد:\nالاسم: ${document.getElementById('name').value}\nالهوية: ${document.getElementById('national_id').value}\nالإيميل: ${document.getElementById('email').value}\nالتخصص: ${document.getElementById('major_select').value}`;
+            
+            let bridgingInfo = "";
+            if(document.getElementById('type_title').innerText === 'تجسير') {
+                bridgingInfo = `\nتخصص الدبلوم: ${document.getElementById('old_major').value}\nمعدل الدبلوم: ${document.getElementById('old_gpa').value}`;
+            }
+
+            const msg = `🚨 تقديم جديد (${document.getElementById('type_title').innerText}):\nالاسم: ${document.getElementById('name').value}\nالهوية: ${document.getElementById('national_id').value}\nالتخصص: ${document.getElementById('major_select').value}${bridgingInfo}`;
+            
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({chat_id:CHAT_ID, text:msg})});
             switchTab('pay_page');
-        } else alert('يرجى إكمال الحقول المطلوبة بشكل صحيح');
+        } else alert('يرجى إكمال الحقول المطلوبة');
     }
 
     async function finalSubmit() {
